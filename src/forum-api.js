@@ -1,6 +1,11 @@
 import { forumGet } from './http.js';
 
+function isError(data) {
+  return data && data._httpError;
+}
+
 function extractTopics(payload) {
+  if (isError(payload)) return payload;
   return (payload.topic_list?.topics || []).map((t) => ({
     id: t.id,
     title: t.title,
@@ -19,6 +24,7 @@ export async function searchForum({ query, page, order }) {
   const params = { q };
   if (page) params.page = page;
   const data = await forumGet('/search.json', params);
+  if (isError(data)) return data;
   return {
     posts: (data.posts || []).map((p) => ({
       id: p.id,
@@ -62,6 +68,7 @@ export async function getTopicPosts({ topic_id, post_number }) {
     include_suggested: 'false',
   };
   const data = await forumGet(`/t/topic/${topic_id}.json`, params);
+  if (isError(data)) return data;
   return (data.post_stream?.posts || []).map((p) => ({
     post_number: p.post_number,
     username: p.username,
@@ -75,6 +82,7 @@ export async function getTopicPosts({ topic_id, post_number }) {
 
 export async function getCategories() {
   const data = await forumGet('/categories.json');
+  if (isError(data)) return data;
   const cats = [];
   for (const c of data.category_list?.categories || []) {
     cats.push({ id: c.id, name: c.name, slug: c.slug, topic_count: c.topic_count });
@@ -93,6 +101,7 @@ export async function getCategories() {
 
 export async function getUserSummary({ username }) {
   const data = await forumGet(`/u/${username}/summary.json`);
+  if (isError(data)) return data;
   const s = data.user_summary || {};
   const user = data.users?.[0] || {};
   return {
@@ -127,6 +136,7 @@ export async function getUserActions({ username, filter, offset }) {
   if (filter !== undefined) params.filter = filter;
   if (offset !== undefined) params.offset = offset;
   const data = await forumGet('/user_actions.json', params);
+  if (isError(data)) return data;
   return (data.user_actions || []).map((a) => ({
     topic_id: a.topic_id,
     post_number: a.post_number,

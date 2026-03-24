@@ -98,6 +98,7 @@ export function describeToolCall(name, args) {
 
 export function summarizeToolResult(name, result) {
   if (!result) return 'no data';
+  if (result._httpError) return `HTTP ${result._httpError} error`;
 
   if (name === 'search_forum') {
     const posts = result.posts?.length || 0;

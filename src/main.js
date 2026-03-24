@@ -155,8 +155,9 @@ function init() {
       }
 
       ui.removeThinking();
-      const [response, usage] = await Promise.all([result.response, result.usage]);
-      conversationMessages.push(...response.messages);
+      const response = await result.response.catch(() => null);
+      const usage = await result.usage.catch(() => null);
+      if (response) conversationMessages.push(...response.messages);
       const totalIn = usage?.inputTokens || 0;
       const totalOut = usage?.outputTokens || 0;
       ui.setStatus(`${stepCount} step(s) · ${totalIn + totalOut} tokens`);

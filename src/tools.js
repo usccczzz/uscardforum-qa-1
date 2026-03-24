@@ -79,7 +79,7 @@ export const forumTools = {
 
   get_user_summary: tool({
     description:
-      'Fetch a comprehensive summary of a user profile including stats, top topics, and top replies.',
+      'Fetch a user profile summary including stats, top topics, and top replies. Returns HTTP 404 if the user has disabled public profile access — use get_user_topics or get_user_actions instead.',
     inputSchema: z.object({
       username: z.string().describe("The user's handle (case-insensitive)"),
     }),

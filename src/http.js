@@ -8,6 +8,6 @@ export async function forumGet(path, params = {}) {
   const res = await fetch(url.toString(), {
     headers: { Accept: 'application/json' },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
+  if (!res.ok) return { _httpError: res.status, url: url.toString() };
   return res.json();
 }
