@@ -1,52 +1,121 @@
 export function renderMarkdown(text) {
   if (!text) return '';
+  const lines = text.split('\n');
+  const blocks = [];
+  let i = 0;
 
-  let html = escapeHtml(text);
+  while (i < lines.length) {
+    const line = lines[i];
 
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    return `<pre><code class="lang-${lang || 'text'}">${code.trim()}</code></pre>`;
-  });
+    if (line.trim() === '') { i++; continue; }
 
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    if (/^```/.test(line)) {
+      const lang = line.slice(3).trim();
+      const codeLines = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++;
+      blocks.push(`<pre><code class="lang-${esc(lang || 'text')}">${esc(codeLines.join('\n'))}</code></pre>`);
+      continue;
+    }
 
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    if (/^\|.+\|/.test(line) && i + 1 < lines.length && /^\|[\s:|-]+\|$/.test(lines[i + 1]?.trim())) {
+      const headerCells = parseTableRow(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && /^\|.+\|/.test(lines[i])) {
+        rows.push(parseTableRow(lines[i]));
+        i++;
+      }
+      let t = '<table><thead><tr>';
+      for (const c of headerCells) t += `<th>${inline(c)}</th>`;
+      t += '</tr></thead><tbody>';
+      for (const row of rows) {
+        t += '<tr>';
+        for (const c of row) t += `<td>${inline(c)}</td>`;
+        t += '</tr>';
+      }
+      t += '</tbody></table>';
+      blocks.push(t);
+      continue;
+    }
 
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    if (/^#{1,3} /.test(line)) {
+      const m = line.match(/^(#{1,3}) (.+)$/);
+      const tag = `h${m[1].length}`;
+      blocks.push(`<${tag}>${inline(m[2])}</${tag}>`);
+      i++;
+      continue;
+    }
 
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    if (/^&gt; |^> /.test(line)) {
+      const qLines = [];
+      while (i < lines.length && /^(&gt; |> )/.test(lines[i])) {
+        qLines.push(lines[i].replace(/^(&gt; |> )/, ''));
+        i++;
+      }
+      blocks.push(`<blockquote>${inline(qLines.join('<br>'))}</blockquote>`);
+      continue;
+    }
 
-  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+    if (/^[-*] /.test(line)) {
+      const items = [];
+      while (i < lines.length && /^[-*] /.test(lines[i])) {
+        items.push(lines[i].replace(/^[-*] /, ''));
+        i++;
+      }
+      blocks.push('<ul>' + items.map(t => `<li>${inline(t)}</li>`).join('') + '</ul>');
+      continue;
+    }
 
-  html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+    if (/^\d+\. /.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        items.push(lines[i].replace(/^\d+\. /, ''));
+        i++;
+      }
+      blocks.push('<ol>' + items.map(t => `<li>${inline(t)}</li>`).join('') + '</ol>');
+      continue;
+    }
 
-  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, (match) => {
-    if (match.includes('<ul>')) return match;
-    return `<ol>${match}</ol>`;
-  });
+    if (line.trim() === '---' || line.trim() === '***') {
+      blocks.push('<hr>');
+      i++;
+      continue;
+    }
 
-  html = html
-    .split('\n\n')
-    .map((block) => {
-      const trimmed = block.trim();
-      if (!trimmed) return '';
-      if (/^<(h[1-3]|pre|ul|ol|blockquote|li)/.test(trimmed)) return trimmed;
-      return `<p>${trimmed}</p>`;
-    })
-    .join('\n');
+    const paraLines = [];
+    while (i < lines.length && lines[i].trim() !== '' &&
+           !/^```/.test(lines[i]) && !/^#{1,3} /.test(lines[i]) &&
+           !/^[-*] /.test(lines[i]) && !/^\d+\. /.test(lines[i]) &&
+           !/^\|.+\|/.test(lines[i]) && !/^(&gt; |> )/.test(lines[i]) &&
+           lines[i].trim() !== '---' && lines[i].trim() !== '***') {
+      paraLines.push(lines[i]);
+      i++;
+    }
+    blocks.push(`<p>${inline(paraLines.join('<br>'))}</p>`);
+  }
 
-  html = html.replace(/\n/g, '<br>');
-  html = html.replace(/<br><br>/g, '</p><p>');
-  html = html.replace(/<(ul|ol|pre|blockquote|h[1-3])>/g, '<$1>');
-
-  return html;
+  return blocks.join('\n');
 }
 
-function escapeHtml(str) {
+function parseTableRow(line) {
+  return line.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+}
+
+function inline(text) {
+  let s = esc(text);
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+  return s;
+}
+
+function esc(str) {
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

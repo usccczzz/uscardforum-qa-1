@@ -127,8 +127,13 @@ const CSS = `
 .msg-ai ul,.msg-ai ol{margin:2px 0;padding-left:18px}
 .msg-ai li{margin:1px 0}
 .msg-ai blockquote{border-left:2px solid rgba(139,92,246,.4);margin:4px 0;padding:2px 12px;color:#71717a}
-.msg-ai p{margin:2px 0}
+.msg-ai p{margin:4px 0}
 .msg-ai strong{color:#e8e8ed}
+.msg-ai hr{border:none;border-top:1px solid rgba(255,255,255,.08);margin:8px 0}
+.msg-ai table{border-collapse:collapse;width:100%;margin:6px 0;font-size:12px}
+.msg-ai th,.msg-ai td{border:1px solid rgba(255,255,255,.1);padding:5px 8px;text-align:left}
+.msg-ai th{background:rgba(139,92,246,.08);color:#e8e8ed;font-weight:600;font-size:11.5px}
+.msg-ai td{color:#a1a1aa}
 
 /* ── error ── */
 .msg-err{
@@ -288,7 +293,15 @@ export function createUI() {
     inputEl.style.height = Math.min(inputEl.scrollHeight, 100) + 'px';
   });
 
+  let userScrolledUp = false;
+
+  msgs.addEventListener('scroll', () => {
+    const distFromBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+    userScrolledUp = distFromBottom > 40;
+  });
+
   function scroll() {
+    if (userScrolledUp) return;
     requestAnimationFrame(() => { msgs.scrollTop = msgs.scrollHeight; });
   }
 
@@ -309,6 +322,7 @@ export function createUI() {
 
   function addMessage(role, content) {
     if (role === 'user') {
+      userScrolledUp = false;
       return append(el('msg-user', esc(content)));
     }
     if (role === 'error') {
