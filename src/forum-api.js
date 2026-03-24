@@ -153,13 +153,33 @@ export async function getCurrentUser() {
   if (isError(data)) return data;
   const u = data.current_user || {};
   return {
+    id: u.id,
     username: u.username,
     name: u.name,
+    admin: u.admin,
+    moderator: u.moderator,
     trust_level: u.trust_level,
+    title: u.title,
     unread_notifications: u.unread_notifications,
     unread_high_priority_notifications: u.unread_high_priority_notifications,
-    unread_private_messages: u.unread_private_messages,
     all_unread_notifications_count: u.all_unread_notifications_count,
+    new_personal_messages_notifications_count: u.new_personal_messages_notifications_count,
+    can_send_private_messages: u.can_send_private_messages,
+    can_create_topic: u.can_create_topic,
+    groups: (u.groups || []).map((g) => g.name),
+    muted_category_ids: u.muted_category_ids,
+    watched_category_ids: u.watched_category_ids,
+    tracked_category_ids: u.tracked_category_ids,
+    sidebar_category_ids: u.sidebar_category_ids,
+    muted_tags: (u.muted_tags || []).map((t) => t.name),
+    watched_tags: u.watched_tags,
+    previous_visit_at: u.previous_visit_at,
+    draft_count: u.draft_count,
+    pending_posts_count: u.pending_posts_count,
+    votes_left: u.votes_left,
+    vote_limit: u.vote_limit,
+    timezone: u.user_option?.timezone,
+    hide_profile: u.user_option?.hide_profile,
   };
 }
 
