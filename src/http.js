@@ -1,0 +1,13 @@
+const FORUM_BASE = 'https://www.uscardforum.com';
+
+export async function forumGet(path, params = {}) {
+  const url = new URL(path, FORUM_BASE);
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+  }
+  const res = await fetch(url.toString(), {
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
+  return res.json();
+}
