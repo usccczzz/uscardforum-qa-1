@@ -18,5 +18,13 @@ export function createAgent(settings) {
     instructions: SYSTEM_PROMPT,
     tools: forumTools,
     stopWhen: stepCountIs(50),
+    providerOptions: {
+      google: {
+        thinkingConfig: {
+          thinkingLevel: 'medium',
+          includeThoughts: true,
+        },
+      },
+    },
   });
 }

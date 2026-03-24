@@ -228,6 +228,18 @@ const CSS = `
 
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── generation bar ── */
+.gen-bar{
+  flex:0 0 2px;overflow:hidden;opacity:0;transition:opacity .2s;
+}
+.gen-bar.active{opacity:1}
+.gen-bar-inner{
+  width:40%;height:100%;
+  background:linear-gradient(90deg,transparent,#8b5cf6,#0ea5e9,transparent);
+  animation:gen-slide 1.2s ease-in-out infinite;
+}
+@keyframes gen-slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
 /* ── status bar ── */
 .status{
   padding:6px 16px;font-size:10px;color:#3f3f46;text-align:center;
@@ -294,6 +306,7 @@ const HTML = `
   </div>
   <div class="history"></div>
   <div class="msgs"></div>
+  <div class="gen-bar"><div class="gen-bar-inner"></div></div>
   <div class="status"></div>
   <div class="input-area">
     <textarea class="in-text" rows="1" placeholder="Ask anything about USCardForum..."></textarea>
@@ -322,6 +335,7 @@ export function createUI() {
   const providerEl = $('.in-provider');
   const historyEl = $('.history');
   const msgs = $('.msgs');
+  const genBar = $('.gen-bar');
   const statusEl = $('.status');
   const inputEl = $('.in-text');
   const sendBtn = $('.btn-send');
@@ -475,6 +489,10 @@ export function createUI() {
     if (t) t.remove();
   }
 
+  function setGenerating(active) {
+    genBar.classList.toggle('active', active);
+  }
+
   function setStatus(text) { statusEl.textContent = text; }
 
   function setInputEnabled(enabled, showStop) {
@@ -561,6 +579,7 @@ export function createUI() {
     finalizeReasoningBlock,
     showThinking,
     removeThinking,
+    setGenerating,
     setStatus,
     setInputEnabled,
     scrollToBottom: scroll,

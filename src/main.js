@@ -149,6 +149,7 @@ function init() {
 
     abortController = new AbortController();
 
+    ui.setGenerating(true);
     ui.showThinking('Thinking...');
     let streamEl = null;
     let fullText = '';
@@ -264,6 +265,7 @@ function init() {
     } finally {
       abortController = null;
       running = false;
+      ui.setGenerating(false);
       ui.setInputEnabled(true, false);
       ui.inputEl.focus();
       persistCurrentConvo();
