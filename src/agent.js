@@ -13,18 +13,23 @@ function createModel({ provider, apiKey, model, baseUrl }) {
 }
 
 export function createAgent(settings) {
-  return new ToolLoopAgent({
+  const agentOpts = {
     model: createModel(settings),
     instructions: SYSTEM_PROMPT,
     tools: forumTools,
     stopWhen: stepCountIs(50),
-    providerOptions: {
+  };
+
+  if (settings.thinking) {
+    agentOpts.providerOptions = {
       google: {
         thinkingConfig: {
           thinkingLevel: 'medium',
           includeThoughts: true,
         },
       },
-    },
-  });
+    };
+  }
+
+  return new ToolLoopAgent(agentOpts);
 }

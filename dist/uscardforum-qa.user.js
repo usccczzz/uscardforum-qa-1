@@ -129,21 +129,24 @@
     provider: "gemini",
     apiKey: "",
     model: "gemini-3.1-pro-preview",
-    baseUrl: ""
+    baseUrl: "",
+    thinking: true
   };
   function loadSettings() {
     return {
       provider: GM_getValue("provider", DEFAULTS.provider),
       apiKey: GM_getValue("apiKey", DEFAULTS.apiKey),
       model: GM_getValue("model", DEFAULTS.model),
-      baseUrl: GM_getValue("baseUrl", DEFAULTS.baseUrl)
+      baseUrl: GM_getValue("baseUrl", DEFAULTS.baseUrl),
+      thinking: GM_getValue("thinking", DEFAULTS.thinking)
     };
   }
-  function saveSettings({ provider, apiKey, model, baseUrl }) {
+  function saveSettings({ provider, apiKey, model, baseUrl, thinking }) {
     if (provider !== void 0) GM_setValue("provider", provider);
     if (apiKey !== void 0) GM_setValue("apiKey", apiKey);
     if (model !== void 0) GM_setValue("model", model);
     if (baseUrl !== void 0) GM_setValue("baseUrl", baseUrl);
+    if (thinking !== void 0) GM_setValue("thinking", thinking);
   }
 
   // node_modules/@ai-sdk/provider/dist/index.mjs
@@ -30621,20 +30624,23 @@ Category IDs and their slugs for search operators:
     return google2(model);
   }
   function createAgent(settings) {
-    return new ToolLoopAgent({
+    const agentOpts = {
       model: createModel(settings),
       instructions: SYSTEM_PROMPT,
       tools: forumTools,
-      stopWhen: stepCountIs(50),
-      providerOptions: {
+      stopWhen: stepCountIs(50)
+    };
+    if (settings.thinking) {
+      agentOpts.providerOptions = {
         google: {
           thinkingConfig: {
             thinkingLevel: "medium",
             includeThoughts: true
           }
         }
-      }
-    });
+      };
+    }
+    return new ToolLoopAgent(agentOpts);
   }
 
   // src/markdown.js
@@ -30910,8 +30916,20 @@ Category IDs and their slugs for search operators:
   box-shadow:0 0 40px rgba(139,92,246,.08),0 20px 60px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.03);
   display:none;flex-direction:column;
   z-index:2147483646;overflow:hidden;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
 }
 .panel.open{display:flex}
+.panel.overlay{
+  top:0;left:0;right:0;bottom:0;
+  width:100%;height:100%;
+  border-radius:0;
+  max-width:100%;max-height:100%;
+}
+.panel.overlay .msgs{padding:16px 10%}
+.panel.overlay .input-area{padding:12px 10%}
+.panel.overlay .hdr{padding:12px 10%}
+.panel.overlay .settings{padding:12px 10%}
+.panel.overlay .status{padding:6px 10%}
 
 /* \u2500\u2500 header \u2500\u2500 */
 .hdr{
@@ -30946,6 +30964,27 @@ Category IDs and their slugs for search operators:
 .settings input:focus,.settings select:focus{outline:none;border-color:rgba(139,92,246,.5);box-shadow:0 0 10px rgba(139,92,246,.1)}
 .settings .row-base-url{display:none}
 .settings.show-base-url .row-base-url{display:block}
+.settings .row-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.settings .row-toggle label{margin:0}
+.switch{
+  position:relative;width:36px;height:20px;flex:0 0 36px;
+}
+.switch input{opacity:0;width:0;height:0}
+.switch .slider{
+  position:absolute;inset:0;cursor:pointer;
+  background:rgba(255,255,255,.1);border-radius:10px;
+  transition:background .2s;
+}
+.switch .slider::before{
+  content:'';position:absolute;left:2px;top:2px;
+  width:16px;height:16px;border-radius:50%;
+  background:#71717a;transition:all .2s;
+}
+.switch input:checked + .slider{background:rgba(139,92,246,.5)}
+.switch input:checked + .slider::before{transform:translateX(16px);background:#c4b5fd}
 
 /* \u2500\u2500 history panel \u2500\u2500 */
 .history{display:none;flex:1 1 0;overflow-y:auto;padding:8px 10px;scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.2) transparent}
@@ -31148,6 +31187,7 @@ Category IDs and their slugs for search operators:
   <div class="hdr">
     <div class="hdr-title"><span class="hdr-dot"></span> USCardForum QA</div>
     <div class="hdr-actions">
+      <button class="btn-expand" title="Toggle overlay">\u26F6</button>
       <button class="btn-history">History</button>
       <button class="btn-settings">Settings</button>
       <button class="btn-new">+ New</button>
@@ -31166,6 +31206,10 @@ Category IDs and their slugs for search operators:
     <div class="row-base-url">
       <label>Base URL</label>
       <input type="text" class="in-base-url" placeholder="https://your-litellm-server/v1">
+    </div>
+    <div class="row-toggle">
+      <label>Thinking Mode</label>
+      <label class="switch"><input type="checkbox" class="in-thinking"><span class="slider"></span></label>
     </div>
   </div>
   <div class="history"></div>
@@ -31212,6 +31256,7 @@ Category IDs and their slugs for search operators:
       if (panel.classList.contains("open")) requestAnimationFrame(() => inputEl.focus());
     });
     $(".btn-settings").addEventListener("click", () => settingsEl.classList.toggle("open"));
+    $(".btn-expand").addEventListener("click", () => panel.classList.toggle("overlay"));
     let _onHistoryOpen = null;
     $(".btn-history").addEventListener("click", () => {
       const opening = !historyEl.classList.contains("open");
@@ -31404,6 +31449,7 @@ Category IDs and their slugs for search operators:
       apiKeyInput: $(".in-key"),
       modelInput: $(".in-model"),
       baseUrlInput: $(".in-base-url"),
+      thinkingInput: $(".in-thinking"),
       syncProviderUI,
       messagesEl: msgs,
       inputEl,
@@ -31473,6 +31519,7 @@ Category IDs and their slugs for search operators:
     ui.apiKeyInput.value = settings.apiKey;
     ui.modelInput.value = settings.model;
     ui.baseUrlInput.value = settings.baseUrl;
+    ui.thinkingInput.checked = settings.thinking;
     ui.syncProviderUI();
     let running = false;
     let abortController = null;
@@ -31484,7 +31531,8 @@ Category IDs and their slugs for search operators:
         provider: ui.providerInput.value,
         apiKey: ui.apiKeyInput.value,
         model: ui.modelInput.value,
-        baseUrl: ui.baseUrlInput.value
+        baseUrl: ui.baseUrlInput.value,
+        thinking: ui.thinkingInput.checked
       };
     }
     let agent = createAgent(currentSettings());
@@ -31497,6 +31545,7 @@ Category IDs and their slugs for search operators:
     ui.apiKeyInput.addEventListener("change", onSettingsChange);
     ui.modelInput.addEventListener("change", onSettingsChange);
     ui.baseUrlInput.addEventListener("change", onSettingsChange);
+    ui.thinkingInput.addEventListener("change", onSettingsChange);
     function persistCurrentConvo() {
       if (!currentConvoId || conversationMessages.length === 0) return;
       saveConversation({

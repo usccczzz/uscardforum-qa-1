@@ -17,6 +17,7 @@ function init() {
   ui.apiKeyInput.value = settings.apiKey;
   ui.modelInput.value = settings.model;
   ui.baseUrlInput.value = settings.baseUrl;
+  ui.thinkingInput.checked = settings.thinking;
   ui.syncProviderUI();
 
   let running = false;
@@ -31,6 +32,7 @@ function init() {
       apiKey: ui.apiKeyInput.value,
       model: ui.modelInput.value,
       baseUrl: ui.baseUrlInput.value,
+      thinking: ui.thinkingInput.checked,
     };
   }
 
@@ -46,6 +48,7 @@ function init() {
   ui.apiKeyInput.addEventListener('change', onSettingsChange);
   ui.modelInput.addEventListener('change', onSettingsChange);
   ui.baseUrlInput.addEventListener('change', onSettingsChange);
+  ui.thinkingInput.addEventListener('change', onSettingsChange);
 
   function persistCurrentConvo() {
     if (!currentConvoId || conversationMessages.length === 0) return;
