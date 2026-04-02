@@ -40470,7 +40470,16 @@ Category IDs for search operators:
   }
 
   // src/main.js
+  function hideDifyChatbot() {
+    const btn = document.getElementById("dify-chatbot-bubble-button");
+    const win = document.getElementById("dify-chatbot-bubble-window");
+    if (btn) btn.style.display = "none";
+    if (win) win.style.display = "none";
+  }
   function init() {
+    hideDifyChatbot();
+    const observer = new MutationObserver(hideDifyChatbot);
+    observer.observe(document.body, { childList: true, subtree: true });
     const settings = loadSettings();
     const ui = createUI();
     ui.providerInput.value = settings.provider;

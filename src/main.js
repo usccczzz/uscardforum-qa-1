@@ -9,7 +9,19 @@ import {
   newConversationId,
 } from './conversations.js';
 
+function hideDifyChatbot() {
+  const btn = document.getElementById('dify-chatbot-bubble-button');
+  const win = document.getElementById('dify-chatbot-bubble-window');
+  if (btn) btn.style.display = 'none';
+  if (win) win.style.display = 'none';
+}
+
 function init() {
+  // Hide the site's built-in Dify chatbot
+  hideDifyChatbot();
+  const observer = new MutationObserver(hideDifyChatbot);
+  observer.observe(document.body, { childList: true, subtree: true });
+
   const settings = loadSettings();
   const ui = createUI();
 
