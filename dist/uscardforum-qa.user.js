@@ -39415,7 +39415,7 @@ Category IDs for search operators:
   // src/markdown.js
   function renderMarkdown(text2) {
     if (!text2) return "";
-    const lines = text2.split("\n");
+    const lines = text2.replace(/<br\s*\/?>/gi, "\n").split("\n");
     const blocks = [];
     let i = 0;
     while (i < lines.length) {
