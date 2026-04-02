@@ -40485,6 +40485,7 @@ Category IDs for search operators:
     ui.providerInput.value = settings.provider;
     ui.apiKeyInput.value = settings.apiKey;
     ui.modelInput.value = settings.model;
+    ui.modelSelectInput.value = settings.model;
     ui.baseUrlInput.value = settings.baseUrl;
     ui.thinkingInput.checked = settings.thinking;
     ui.themeInput.checked = settings.theme === "light";
