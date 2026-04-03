@@ -96,8 +96,9 @@ const CSS = `
 
 /* ── panel shell ── */
 .panel{
-  position:fixed;bottom:84px;right:20px;
-  width:460px;max-width:calc(100vw - 20px);height:640px;max-height:calc(100vh - 104px);
+  position:fixed;bottom:84px;right:10px;left:auto;
+  width:460px;height:640px;max-height:calc(100vh - 104px);
+  max-width:calc(100% - 20px);
   background:var(--bg);
   color:var(--text);
   border-radius:20px;
