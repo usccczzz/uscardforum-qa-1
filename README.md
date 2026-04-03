@@ -1,6 +1,6 @@
 # USCardForum QA Bot
 
-Tampermonkey userscript that embeds an AI-powered QA bot on [USCardForum](https://www.uscardforum.com). The agent uses Gemini via the Vercel AI SDK to autonomously search and read forum content through 10 Discourse API tools, then synthesizes thorough answers with source citations.
+Tampermonkey userscript that embeds an AI-powered QA bot on [USCardForum](https://www.uscardforum.com). The agent uses the Vercel AI SDK to autonomously search and read forum content through 10 Discourse API tools, then synthesizes thorough answers with source citations. Supports Gemini, OpenAI, and any OpenAI-compatible API provider.
 
 ## Install (One-Click)
 
@@ -22,10 +22,13 @@ Search for **USCardForum QA Bot** on Greasy Fork.
 
 1. Navigate to https://www.uscardforum.com
 2. Click the **✦** gradient button (bottom-right corner) to open the QA panel
-3. Click **Settings** → enter your **Gemini API Key** and choose a model
+3. Click **Settings** → select your **Provider**, enter your **API Key**, and choose a model
 4. Start asking questions!
 
-Supports **Gemini API** (direct) or **LiteLLM** (Gemini-compatible) as the provider.
+Supported providers:
+- **Gemini API** — direct Google Gemini access
+- **OpenAI API** — GPT models via OpenAI
+- **OpenAI-compatible** — any provider with an OpenAI-compatible API (e.g. LiteLLM, Ollama, Azure OpenAI, Together AI, etc.)
 
 ## Features
 
@@ -73,7 +76,7 @@ Output: `dist/uscardforum-qa.user.js`
 | Tool | Description |
 |------|-------------|
 | `search_forum` | Full-text search with Discourse operators (`in:title`, `@user`, `category:`, `after:`, `before:`) |
-| `get_topic_posts` | Read posts from a topic with pagination (~20 per call) |
+| `get_topic_posts` | Read posts from a topic with pagination (~100 per call) |
 | `get_hot_topics` | Currently trending topics by engagement |
 | `get_new_topics` | Latest topics by creation time |
 | `get_top_topics` | Top topics by period (daily/weekly/monthly/quarterly/yearly) |
@@ -90,7 +93,7 @@ Output: `dist/uscardforum-qa.user.js`
 | Provider | Gemini API | `GM_setValue` |
 | API Key | (empty) | `GM_setValue` |
 | Model | `gemini-3.1-pro-preview` | `GM_setValue` |
-| Base URL | (empty, for LiteLLM) | `GM_setValue` |
+| Base URL | (empty, for OpenAI-compatible providers) | `GM_setValue` |
 
 ## License
 
